@@ -2,12 +2,124 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
-<Button  
-    android:id="@+id/MyButton"
-    android:layout_width="match_parent" 
-    android:layout_height="wrap_content" 
-    android:text="@string/Hello"
-    />
+    android:layout_height="match_parent">
+  <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+    <TextView
+        android:text="Träningens längd (sekunder)"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="0dp"
+        android:layout_weight="0.6"
+        android:layout_height="match_parent" />
+    <EditText
+        android:inputType="number"
+        android:text="45"
+        android:layout_width="0dp"
+        android:layout_weight="0.4"
+        android:layout_height="match_parent"
+        android:id="@+id/set_seconds" />
+  </LinearLayout>
+  <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+    <TextView
+        android:text="Paus i sekunder"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="0dp"
+        android:layout_weight="0.6"
+        android:layout_height="match_parent" />
+    <EditText
+        android:inputType="number"
+        android:text="15"
+        android:layout_width="0dp"
+        android:layout_weight="0.4"
+        android:layout_height="match_parent"
+        android:id="@+id/set_paus" />
+  </LinearLayout>
+  <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+    <TextView
+        android:text="Iterationer"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="0dp"
+        android:layout_weight="0.6"
+        android:layout_height="match_parent" />
+    <EditText
+        android:inputType="number"
+        android:text="2"
+        android:layout_width="0dp"
+        android:layout_weight="0.4"
+        android:layout_height="match_parent"
+        android:id="@+id/set_iterationer" />
+  </LinearLayout>
+  <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+    <TextView
+        android:text="Antal stationer"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="0dp"
+        android:layout_weight="0.6"
+        android:layout_height="match_parent" />
+    <EditText
+        android:inputType="number"
+        android:text="4"
+        android:layout_width="0dp"
+        android:layout_weight="0.4"
+        android:layout_height="match_parent"
+        android:id="@+id/set_count" />
+  </LinearLayout>
+  <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+    <TextView
+        android:text="Tid för flytt"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="0dp"
+        android:layout_weight="0.6"
+        android:layout_height="match_parent" />
+    <EditText
+        android:inputType="number"
+        android:text="45"
+        android:layout_width="0dp"
+        android:layout_weight="0.4"
+        android:layout_height="match_parent"
+        android:id="@+id/move_time" />
+  </LinearLayout>
+  <TextView
+      android:text=""
+      android:textAppearance="?android:attr/textAppearanceLarge"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/status" />
+  <Button
+      android:id="@+id/start_button"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="STARTA" />
+  <Button
+      android:id="@+id/stop_button"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="STOPPA"
+      android:visibility="gone" />
+  <Button
+      android:id="@+id/pause_button"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="PAUSA"
+      android:visibility="gone" />
+  <Button
+      android:id="@+id/resume_button"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="ÅTERUPPTA"
+      android:visibility="gone" />
 </LinearLayout>
