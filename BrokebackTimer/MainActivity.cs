@@ -268,6 +268,8 @@ namespace BrokebackTimer
             //Same as setting enabled to true
             timer.Start();
 
+            this.Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+
         }
         void Stop(object sender, EventArgs e)
         {
@@ -277,6 +279,9 @@ namespace BrokebackTimer
             timer.Stop();
 
             status.Text = "";
+
+            this.Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
+
         }
 
         void Pause(object sender, EventArgs e)
