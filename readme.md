@@ -1,4 +1,4 @@
-﻿Gym timer for circuit training. Set the following numbers
+Gym timer for circuit training. Set the following numbers
 - Length of training (e.g. 45 seconds)
 - Number of iterations of the same training
 - The pause time between iterations
