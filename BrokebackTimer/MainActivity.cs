@@ -276,6 +276,10 @@ namespace BrokebackTimer
             currentTimerState = TimerState.Stopped;
             SetButtonVisibility();
 
+            readyset = false;
+            iterationsInSamePlace = 0;
+            stationsRotated = 0;
+
             timer.Stop();
 
             status.Text = "";
