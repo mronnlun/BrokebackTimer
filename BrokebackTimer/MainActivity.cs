@@ -9,6 +9,7 @@ using System.Timers;
 using Android.Speech.Tts;
 using Java.Util;
 using System.Linq;
+using System.Diagnostics;
 
 namespace BrokebackTimer
 {
@@ -30,7 +31,7 @@ namespace BrokebackTimer
 
         const int WarmUpDuration = 10;
 
-        //1000 ms
+
         System.Timers.Timer timer;
 
         int timeLeftInPhase = int.MinValue;
@@ -56,6 +57,7 @@ namespace BrokebackTimer
 
             status = FindViewById<TextView>(Resource.Id.status);
 
+            //1000 ms
             timer = new System.Timers.Timer(1000);
             timer.AutoReset = true;
             timer.Elapsed += SecondElapsed;
@@ -80,123 +82,148 @@ namespace BrokebackTimer
 
         Phase currentPhase = Phase.None;
 
+        private static readonly object timerlock = new object();
+
         private void SecondElapsed(object sender, ElapsedEventArgs e)
         {
-            timeLeftInPhase--;
+            if (currentTimerState != TimerState.Started)
+                return;
 
-            string statusText = "";
-
-            string utterance = "";
-
-            switch (currentPhase)
+            lock (timerlock)
             {
-                case Phase.Warmup:
-                    statusText = timeLeftInPhase + "s kvar till start";
+                timeLeftInPhase--;
 
-                    if (timeLeftInPhase == 0)
-                    {
-                        utterance = "GO!";
+                System.Diagnostics.Debug.WriteLine("timeLeftInPhase:" + timeLeftInPhase);
 
-                        currentPhase = Phase.Training;
-                        timeLeftInPhase = setLength;
-                    }
-                    else
-                    {
-                        if (!readyset)
+                //If next timer event has started before this method is complete, we could have the next event waiting
+                if (timeLeftInPhase < 0)
+                    return;
+
+                string statusText = "";
+
+                string utterance = "";
+
+                switch (currentPhase)
+                {
+                    case Phase.Warmup:
+                        statusText = timeLeftInPhase + "s kvar till start";
+
+                        if (timeLeftInPhase == 0)
                         {
-                            readyset = true;
+                            utterance = "Start";
 
-                            utterance = timeLeftInPhase + " seconds to start";
+                            currentPhase = Phase.Training;
+                            timeLeftInPhase = setLength;
                         }
-                    }
-                    break;
-                case Phase.MoveBetweenStations:
-                    statusText = timeLeftInPhase + "s att flytta till nästa station";
-
-                    if (timeLeftInPhase == 0)
-                    {
-                        utterance = "GO!";
-
-                        currentPhase = Phase.Training;
-                        timeLeftInPhase = setLength;
-                    }
-                    else
-                    {
-                        if (timeLeftInPhase == 5)
+                        else
                         {
-                            utterance = timeLeftInPhase + " seconds to start";
-                        }
-                    }
-                    break;
-                case Phase.IterationPause:
-                    statusText = timeLeftInPhase + "s kvar av paus";
-
-                    if (timeLeftInPhase == 0)
-                    {
-                        utterance = "GO!";
-
-                        currentPhase = Phase.Training;
-                        timeLeftInPhase = setLength;
-                    }
-                    else
-                    {
-                        if (timeLeftInPhase == 5)
-                        {
-                            utterance = timeLeftInPhase + " seconds to start";
-                        }
-                    }
-                    break;
-                case Phase.Training:
-                    statusText = timeLeftInPhase + "s kvar av träningen";
-
-                    if (timeLeftInPhase == 0)
-                    {
-                        utterance = "Well done!";
-
-                        iterationsInSamePlace++;
-                        if (iterationsInSamePlace == iterations)
-                        {
-                            if (stationsRotated == stationCount)
+                            if (!readyset)
                             {
-                                utterance += " All stations finished!";
-                                Stop(null, null);
+                                readyset = true;
+
+                                utterance = timeLeftInPhase + " seconds to start";
+                            }
+                        }
+                        break;
+                    case Phase.MoveBetweenStations:
+                        statusText = timeLeftInPhase + "s att flytta till nästa station";
+
+                        if (timeLeftInPhase == 0)
+                        {
+                            utterance = "Start";
+
+                            currentPhase = Phase.Training;
+                            timeLeftInPhase = setLength;
+                        }
+                        else
+                        {
+                            if (timeLeftInPhase == 5)
+                            {
+                                utterance = timeLeftInPhase + " seconds to start";
+                            }
+                        }
+                        break;
+                    case Phase.IterationPause:
+                        statusText = timeLeftInPhase + "s kvar av paus";
+
+                        if (timeLeftInPhase == 0)
+                        {
+                            utterance = "Start";
+
+                            currentPhase = Phase.Training;
+                            timeLeftInPhase = setLength;
+                        }
+                        else
+                        {
+                            if (timeLeftInPhase == 5)
+                            {
+                                utterance = timeLeftInPhase + " seconds to start";
+                            }
+                        }
+                        break;
+                    case Phase.Training:
+                        statusText = timeLeftInPhase + "s kvar av träningen";
+
+                        if (timeLeftInPhase == 0)
+                        {
+                            utterance = "Well done!";
+
+                            iterationsInSamePlace++;
+
+                            System.Diagnostics.Debug.WriteLine("iterationsInSamePlace:" + iterationsInSamePlace);
+
+                            if (iterationsInSamePlace == iterations)
+                            {
+                                stationsRotated++;
+
+                                System.Diagnostics.Debug.WriteLine("stationsRotated:" + stationsRotated);
+
+                                if (stationsRotated == stationCount)
+                                {
+                                    utterance += " All stations finished!";
+                                    Stop(false);
+                                }
+                                else
+                                {
+                                    utterance += " Move to the next station";
+
+                                    currentPhase = Phase.MoveBetweenStations;
+                                    timeLeftInPhase = moveTime;
+                                    iterationsInSamePlace = 0;
+                                }
                             }
                             else
                             {
-                                utterance += " Move to the next station";
+                                utterance += " Now take a " + setPause + " second break.";
 
-                                currentPhase = Phase.MoveBetweenStations;
-                                timeLeftInPhase = moveTime;
-                                iterationsInSamePlace = 0;
-                                stationsRotated++;
+                                currentPhase = Phase.IterationPause;
+                                timeLeftInPhase = setPause;
                             }
                         }
                         else
                         {
-                            utterance += " Now take a " + setPause + " second break.";
+                            if (timeLeftInPhase % 15 == 0)
+                            {
+                                utterance = timeLeftInPhase + " seconds left";
+                            }
+                            else if (timeLeftInPhase <= 10)
+                            {
+                                utterance = timeLeftInPhase.ToString();
+                            }
+                        }
+                        break;
+                }
 
-                            currentPhase = Phase.IterationPause;
-                            timeLeftInPhase = setPause;
-                        }
-                    }
-                    else
-                    {
-                        if (timeLeftInPhase % 15 == 0)
-                        {
-                            utterance = timeLeftInPhase + " seconds left";
-                        }
-                        else if (timeLeftInPhase <= 10)
-                        {
-                            utterance = timeLeftInPhase.ToString();
-                        }
-                    }
-                    break;
+                if (!string.IsNullOrWhiteSpace(utterance))
+                {
+                    System.Diagnostics.Debug.WriteLine("utterance:" + utterance);
+
+                    engine.Speak(utterance, QueueMode.Add, null, null);
+                }
+
+                status.Text = statusText;
             }
 
-            if (!string.IsNullOrWhiteSpace(utterance))
-                engine.Speak(utterance, QueueMode.Flush, null, null);
-
-            status.Text = statusText;
         }
 
         enum Phase
@@ -273,18 +300,33 @@ namespace BrokebackTimer
         }
         void Stop(object sender, EventArgs e)
         {
+            Stop(true);
+        }
+
+        void Stop(bool callOnUiThread)
+        {
+            timer.Stop();
+
             currentTimerState = TimerState.Stopped;
-            SetButtonVisibility();
+
+            if (callOnUiThread)
+            {
+                SetButtonVisibility();
+                this.Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
+                status.Text = "";
+            }
+            else
+                RunOnUiThread(() =>
+                {
+                    SetButtonVisibility();
+                    this.Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
+                    status.Text = "";
+                }
+            );
 
             readyset = false;
             iterationsInSamePlace = 0;
             stationsRotated = 0;
-
-            timer.Stop();
-
-            status.Text = "";
-
-            this.Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
 
         }
 
